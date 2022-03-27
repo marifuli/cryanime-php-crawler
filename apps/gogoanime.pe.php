@@ -19,6 +19,8 @@ if($req->status == 200)
     $anime_data = [
         // 'link_id' => [ 'title' => 'more data']
     ];
+    $episode_counter = 1;
+    $anime_counter = 1;
 
     for ($i=0; $i < 3; $i++) 
     { 
@@ -37,7 +39,9 @@ if($req->status == 200)
                     $ep_url_id = $element->href;
                     $ep_url_id = str_replace('/', '', $ep_url_id);
 
-                    if($ep_->status == 200)
+                    if(
+                        $ep_->status == 200 && $ep_html->find('.anime_video_body_cate .anime-info a', 0)
+                    )
                     {
                         $ep_html = $ep_->response;
                         $anime_url = $domain . $ep_html->find('.anime_video_body_cate .anime-info a', 0)->href;
@@ -49,7 +53,17 @@ if($req->status == 200)
                             $anime_ = Http::getHtml($anime_url);
                             $anime_html = $anime_->response;
                             
-                            if($anime_->status == 200)
+                            if(
+                                $anime_->status == 200 && 
+                                $anime_html->find('.anime_info_body .anime_info_body_bg img', 0) && 
+                                $anime_html->find('.anime_info_body .anime_info_body_bg h1', 0) &&
+                                $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 1) &&
+                                $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 2) &&
+                                $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 3) &&
+                                $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 4) &&
+                                $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 5) &&
+                                $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 0)
+                            )
                             {
                                 $data = [
                                     'image' => $anime_html->find('.anime_info_body .anime_info_body_bg img', 0)->src,
@@ -62,8 +76,11 @@ if($req->status == 200)
                                     'type' => trim(explode('Type:', $anime_html->find('.anime_info_body .anime_info_body_bg p.type', 0)->plaintext)[1]),
                                     'url_id' => trim($anime_url_id),
                                 ]; 
+                                $anime_data[$anime_url_id] = $data;
+
                                 // var_dump($data); 
-                                echo Http::addAnime($data) . " - Added Anime \n";
+                                showStatus($anime_counter . ' - ' . Http::addAnime($data) . " - Added Anime");
+                                $anime_counter++;
                             }
                         }
                         $iframes = [];
@@ -76,15 +93,21 @@ if($req->status == 200)
                             }
                             $iframes[] = $link; 
                         }
-                        $ep_data = [
-                            'ep_url_id' => trim($ep_url_id),
-                            'anime_url_id' => trim($anime_url_id),
-                            'iframes' => $iframes,
-                            'ep_number' => $ep_html->find('.anime_video_body .default_ep', 0)->value,
-                        ];
-                        // var_dump($ep_data); die;
-                        // TODO: make a api call and update the Epsisode data
-                        echo Http::addEpisode($ep_data) . " - Added Episode \n";
+                        if(
+                            count($iframes) && $ep_html->find('.anime_video_body .default_ep', 0)
+                        )
+                        {
+                            $ep_data = [
+                                'ep_url_id' => trim($ep_url_id),
+                                'anime_url_id' => trim($anime_url_id),
+                                'iframes' => $iframes,
+                                'ep_number' => $ep_html->find('.anime_video_body .default_ep', 0)->value,
+                            ];
+                            // var_dump($ep_data); die;
+                            // TODO: make a api call and update the Epsisode data
+                            showStatus($episode_counter . ' - ' . Http::addEpisode($ep_data) . " - Added Episode");
+                            $episode_counter++;
+                        }
                         // die;
                     }
                 }

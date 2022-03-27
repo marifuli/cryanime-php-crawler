@@ -26,6 +26,58 @@ class Http
         
         return $res;
     }
+    static function postJson($url, $data)
+    {
+        $res = new stdClass();
+        $res->status = 500;
+        $res->type = null;
+        $res->response = null;
+        $res->object = null;
+        try {
+            //code...
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request('POST', $url, ['json' => $data]);
+            $res->status = $response->getStatusCode();
+            $res->type = $response->getHeaderLine('content-type');
+            $res->response = $response->getBody();
+            $res->object = $response;
+            
+        } 
+        catch (\Throwable $th) 
+        {
+            //throw $th;
+        }
+        
+        return $res;
+    }
+    static function postFormJson($url, $data, $headers = [])
+    {
+        $res = new stdClass();
+        $res->status = 500;
+        $res->type = null;
+        $res->response = null;
+        $res->object = null;
+        try {
+            //code...
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request('POST', $url, ['form_params' => $data, 'headers' => $headers]);
+            $res->status = $response->getStatusCode();
+            $res->type = $response->getHeaderLine('content-type');
+            $res->response = $response->getBody();
+            $res->object = $response;
+            if(str_contains($res->type, 'application/json'))
+            {
+                $res->response = json_decode($res->response);
+            }
+        } 
+        catch (\Throwable $th) 
+        {
+            //throw $th;
+        }
+        
+        return $res;
+    }
+    
 
     static function addAnime ($data) 
     {

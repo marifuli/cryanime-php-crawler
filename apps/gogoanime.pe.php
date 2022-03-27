@@ -25,7 +25,7 @@ if($req->status == 200)
     for ($i=0; $i < 3; $i++) 
     { 
         $type = $i;
-        for ($page=0; $page < 5; $page++) 
+        for ($page=0; $page < 1; $page++) 
         { 
             $ajax = 'https://ajax.gogo-load.com/ajax/page-recent-release.html?page='.($page + 1).'&type='.($type + 1);
             $latest = Http::getHtml($ajax);
@@ -38,12 +38,12 @@ if($req->status == 200)
                     $ep_ = Http::getHtml($domain . $element->href);
                     $ep_url_id = $element->href;
                     $ep_url_id = str_replace('/', '', $ep_url_id);
+                    $ep_html = $ep_->response;
 
                     if(
                         $ep_->status == 200 && $ep_html->find('.anime_video_body_cate .anime-info a', 0)
                     )
-                    {
-                        $ep_html = $ep_->response;
+                    { 
                         $anime_url = $domain . $ep_html->find('.anime_video_body_cate .anime-info a', 0)->href;
                         $anime_url_id = explode('category/', $anime_url)[1];
 
@@ -79,7 +79,7 @@ if($req->status == 200)
                                 $anime_data[$anime_url_id] = $data;
 
                                 // var_dump($data); 
-                                showStatus($anime_counter . ' - ' . Http::addAnime($data) . " - Added Anime");
+                                showStatus($anime_counter . ' - ' . Http::addAnime($data) . " - Added Anime - " . $anime_url_id);
                                 $anime_counter++;
                             }
                         }
@@ -105,7 +105,7 @@ if($req->status == 200)
                             ];
                             // var_dump($ep_data); die;
                             // TODO: make a api call and update the Epsisode data
-                            showStatus($episode_counter . ' - ' . Http::addEpisode($ep_data) . " - Added Episode");
+                            showStatus($episode_counter . ' - ' . Http::addEpisode($ep_data) . " - Added Episode - " . $ep_url_id);
                             $episode_counter++;
                         }
                         // die;

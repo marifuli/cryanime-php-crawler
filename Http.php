@@ -26,4 +26,25 @@ class Http
         
         return $res;
     }
+
+    static function addAnime ($data) 
+    {
+        $client = new \GuzzleHttp\Client(["base_uri" => env('api.base_uri')]);
+        $options = [
+            'json' => $data
+        ]; 
+        $response = $client->post(env('api.addAnime') . '?apikey=' . env('apiKey'), $options);
+
+        return $response->getBody()->getContents();
+    }
+    static function addEpisode ($data) 
+    {
+        $client = new \GuzzleHttp\Client(["base_uri" => env('api.base_uri')]);
+        $options = [
+            'json' => $data
+        ]; 
+        $response = $client->post(env('api.addEpisode') . '?apikey=' . env('apiKey'), $options);
+
+        return $response->getBody()->getContents();
+    }
 }

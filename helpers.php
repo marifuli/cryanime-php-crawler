@@ -8,7 +8,12 @@ function getTime()
 }
 function showStatus($mess) 
 {
-    print $mess . ' - ' . getTime() . "\n";
+    print getTime() . ' - ' . $mess . "\n";
+}
+function env($mess) 
+{
+    $env = include('env.php');
+    return $env[$mess];
 }
 
 

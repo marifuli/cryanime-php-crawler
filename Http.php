@@ -99,4 +99,30 @@ class Http
 
         return $response->getBody()->getContents();
     }
+    static function isValidLink($link, $contentType = null)
+    {
+        try {
+            $array = get_headers($link);
+            if($array && is_array($array))
+            {
+                if($contentType)
+                {
+                    $data = false;
+                    foreach($array as $type)
+                    {
+                        if(str_contains($type, $contentType))
+                        {
+                            $data = true;
+                        }
+                    }
+                    return $data;
+                }
+                return true;
+            }
+        } 
+        catch (\Throwable $th) {
+            //throw $th;
+        } 
+        return false;
+    }
 }

@@ -18,7 +18,7 @@ if($req->status == 200)
         $latest_uri = 'https://animeidhentai.com/wp-admin/admin-ajax.php';
         $data = [
             'action' => 'action_results', 
-            'vars' => '{"_wpresults":"afd690ed98","taxonomy":"none","search":"none","term":"none","type":"episodes","genres":[],"years":[],"sort":"1","page":2}',
+            'vars' => '{"_wpresults":"afd690ed98","taxonomy":"none","search":"none","term":"none","type":"episodes","genres":[],"years":[],"sort":"1","page":'.$page_number.'}',
         ];
         $headers = [
             'accept' =>  '*/*',
@@ -35,16 +35,116 @@ if($req->status == 200)
             'x-requested-with' =>  'XMLHttpRequest',
             'x-wp-nonce' =>  'afd690ed98',
         ];
-        
+        showStatus('getting the json');
+
         $page = Http::postFormJson($latest_uri, $data, $headers);
         if(
             $page->status == 200
         )
         {
-            $page_html = str_get_html($page->response->data->html);
-            foreach($page_html->find('article a') as $a)
+            showStatus('Got the json');
+
+            if(!$page->response->data->next)
             {
-                echo $a->href . "\n";
+                $continue = false;
+            }
+            $page_html = str_get_html($page->response->data->html);
+            foreach($page_html->find('article a.lnk-blk') as $a)
+            {
+                showStatus('getting to the episode');
+                $episode = Http::getHtml($a->href);
+                if($episode->status == 200)
+                {
+                    showStatus('episode loaded');
+                    
+                    $episode_html = $episode->response;
+                    if(
+                        true
+                    )
+                    {   
+                        $iframe = $episode_html->find('.player.mgt.mgb2 iframe[allowfullscreen]', 0)->src;
+                        if(!str_contains($iframe, 'http'))
+                        {
+                            $iframe = $episode_html->find('.player.mgt.mgb2 iframe[allowfullscreen]', 0)->getAttribute('data-litespeed-src');
+                        }
+
+                        $title = trim( $episode_html->find('.anime-cn.clb h1', 0)->plaintext );
+                        
+                        $series = trim( $episode_html->find('.player-nv.df.aic.fz12.b-fz16 a', 0)->href );
+                        $series = str_replace('/', '', explode('.com/hentai/', $series)[1] );
+
+                        $year = trim( $episode_html->find('.anime-cn.clb div a', 0)->plaintext );
+                        $released_on = trim( $episode_html->find('.anime-cn.clb div span.mgr.mgb', 5)->innertext );
+                        $quality = trim( $episode_html->find('.anime-cn.clb div a', 1)->plaintext );
+                        $description = trim( $episode_html->find('.description.link-co.mgb2', 0)->plaintext );
+                        $alt_name = trim( 
+                            $episode_html->find('.description.link-co.mgb2 p', 1)?->plaintext 
+                        );
+                        $animidhentai_link = $a->href;
+                        $ep_data = compact(
+                            'title',
+                            'series',
+                            'released_on',
+                            'quality',
+                            'description',
+                            'animidhentai_link',
+                            'alt_name',
+                        );
+                        $links = [
+                            'iframe' => $iframe
+                        ];
+
+                        //- check the oother site if it has any video link
+                        showStatus('Checking the exernal site for mp4');
+                        $search = 'https://tube.hentaistream.com/?s=' . urlencode($title);
+                        $searchReq = Http::getHtml($search);
+                        if($searchReq->status == 200)
+                        {
+                            $searchHtml = $searchReq->response;
+                            if($searchHtml->find('.bodyleft .post', 0))
+                            { 
+                                $ep_data['thumbnail'] = $searchHtml->find('.bodyleft .post .postimg .thumbIMG', 0)->src; 
+
+                                showStatus('Checking the exernal site for mp4 - step 2');
+
+                                $search2 = $searchHtml->find('.bodyleft .post .postimg a', 0)->href;
+                                $searchReq2 = Http::getHtml($search2);
+                                if($searchReq2->status == 200)
+                                {
+                                    $searchHtml2 = $searchReq2->response;
+                                    if(
+                                        $searchHtml2->find('.videohere iframe[allowfullscreen]', 0)
+                                    )
+                                    {
+                                        showStatus('Checking the exernal site for mp4 - step 3');
+
+                                        $searchReq3 = Http::getHtml(
+                                            $searchHtml2->find('.videohere iframe[allowfullscreen]', 0)->src
+                                        );
+                                        if($searchReq3->status == 200)
+                                        {
+                                            $searchHtml3 = $searchReq3->response;
+                                            if($searchHtml3->find('video source[type=video/mp4]', 0))
+                                            {
+                                                $video_link = $searchHtml3->find('video source[type=video/mp4]', 0)->src;
+                                                showStatus('checking mp4 validity');
+                                                if(
+                                                    Http::isValidLink($video_link, 'video/mp4')
+                                                )
+                                                {
+                                                    $links['video'] = $video_link;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        $ep_data['links'] = json_encode($links);
+                        var_dump($ep_data);die;
+                    }
+                }
             }
         }
 

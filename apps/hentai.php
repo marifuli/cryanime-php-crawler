@@ -184,9 +184,10 @@ function save_data($data, $conn)
         showStatus('Already Episode added');
 
         $sql = "UPDATE `animeidhentai` 
-        SET (`alt_name` = ?, `series` = ?, `year` = ?, `quality` = ?, `released_on` = ?, `description` = ?, `genres` = ?, `links` = ?, `animidhentai_link` = ?, `poster` = ?, `thumbnail` = ?) 
+        SET `alt_name` = ?, `series` = ?, `year` = ?, `quality` = ?, `released_on` = ?, `description` = ?, `genres` = ?, `links` = ?, `animidhentai_link` = ?, `poster` = ?, `thumbnail` = ?
         WHERE `title` = ? 
-        LIMIT 1";
+        LIMIT 1
+        ";
         $stmt2 = $conn->prepare($sql);
         $stmt2->bind_param(
             'ssssssssssss',

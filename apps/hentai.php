@@ -69,6 +69,7 @@ if($req->status == 200)
                         }
 
                         $title = trim( $episode_html->find('.anime-cn.clb h1', 0)->plaintext );
+                        $poster = trim( $episode_html->find('.anime-tb.pctr.dn.c-db img', 0)->getAttribute('data-src') );
                         
                         $series = trim( $episode_html->find('.player-nv.df.aic.fz12.b-fz16 a', 0)->href );
                         $series = str_replace('/', '', explode('.com/hentai/', $series)[1] );
@@ -89,6 +90,7 @@ if($req->status == 200)
                             'description',
                             'animidhentai_link',
                             'alt_name',
+                            'poster',
                         );
                         $links = [
                             'iframe' => $iframe
@@ -142,7 +144,9 @@ if($req->status == 200)
                         }
 
                         $ep_data['links'] = json_encode($links);
-                        var_dump($ep_data);die;
+                        showStatus('Adding to database');
+                        save_data($ep_data, $db);
+                        die;
                     }
                 }
             }
@@ -152,4 +156,92 @@ if($req->status == 200)
         $page_number++;
         $continue = false;
     }
+}
+
+function save_data($data, $conn)
+{
+    // var_dump($data);
+    $title = $data['title'] ;
+    $alt_name = $data['alt_name'] ;
+    $series = $data['series'] ;
+    $year = $data['year'] ?? '' ;
+    $quality = $data['quality'] ;
+    $released_on = $data['released_on'] ;
+    $description = $data['description'] ;
+    $genres = $data['genres'] ?? '';
+    $links = $data['links'] ;
+    $animidhentai_link = $data['animidhentai_link'] ;
+    $thumbnail = $data['thumbnail'] ?? '' ;
+    $poster = $data['poster'] ?? '' ;
+
+    $sql = "SELECT * FROM animeidhentai WHERE title = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('s', $title);
+    $stmt->execute();
+
+    if($stmt->get_result()->num_rows)
+    {
+        showStatus('Already Episode added');
+
+        $sql = "UPDATE `animeidhentai` 
+        SET (`alt_name` = ?, `series` = ?, `year` = ?, `quality` = ?, `released_on` = ?, `description` = ?, `genres` = ?, `links` = ?, `animidhentai_link` = ?, `poster` = ?, `thumbnail` = ?) 
+        WHERE `title` = ? 
+        LIMIT 1";
+        $stmt2 = $conn->prepare($sql);
+        $stmt2->bind_param(
+            'ssssssssssss',
+            $alt_name,
+            $series,
+            $year,
+            $quality,
+            $released_on,
+            $description,
+            $genres,
+            $links,
+            $animidhentai_link,
+            $poster,
+            $thumbnail,
+            $title
+        );
+        
+        if ($stmt2->execute()) 
+        {
+            showStatus('Updated Episode');
+        }
+        else 
+        {
+            showStatus('Failed to Update Episode');
+        }
+        $stmt2->close();
+    }else
+    {
+        $sql = "INSERT INTO `animeidhentai` (`title`, `alt_name`, `series`, `year`, `quality`, `views`, `released_on`, `description`, `genres`, `links`, `animidhentai_link`, `poster`, `thumbnail`) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt2 = $conn->prepare($sql);
+        $stmt2->bind_param(
+            'ssssssssssss',
+            $title,
+            $alt_name,
+            $series,
+            $year,
+            $quality,
+            $released_on,
+            $description,
+            $genres,
+            $links,
+            $animidhentai_link,
+            $poster,
+            $thumbnail
+        );
+        
+        if ($stmt2->execute()) 
+        {
+            showStatus('Added Episode');
+        }
+        else 
+        {
+            showStatus('Failed to add Episode');
+        }
+        $stmt2->close();
+    }
+    $stmt->close();
 }

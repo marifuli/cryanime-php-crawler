@@ -13,6 +13,8 @@ if($req->status == 200)
 
     $continue = true;
     $page_number = 1;
+    $i = 0;
+
     while($continue)
     {
         $latest_uri = 'https://animeidhentai.com/wp-admin/admin-ajax.php';
@@ -51,109 +53,135 @@ if($req->status == 200)
             $page_html = str_get_html($page->response->data->html);
             foreach($page_html->find('article a.lnk-blk') as $a)
             {
-                showStatus('getting to the episode');
-                $episode = Http::getHtml($a->href);
-                if($episode->status == 200)
+                $i++;
+                if($i < 0)
                 {
-                    showStatus('episode loaded');
-                    
-                    $episode_html = $episode->response;
-                    if(
-                        true
-                    )
-                    {   
-                        $iframe = $episode_html->find('.player.mgt.mgb2 iframe[allowfullscreen]', 0)->src;
-                        if(!str_contains($iframe, 'http'))
-                        {
-                            $iframe = $episode_html->find('.player.mgt.mgb2 iframe[allowfullscreen]', 0)->getAttribute('data-litespeed-src');
-                        }
-
-                        $title = trim( $episode_html->find('.anime-cn.clb h1', 0)->plaintext );
-                        $poster = trim( $episode_html->find('.anime-tb.pctr.dn.c-db img', 0)->getAttribute('data-src') );
+                    echo count($page_html->find('article a.lnk-blk')) . " - $i \n";
+                }
+                else 
+                {
+                    showStatus('getting to the episode');
+                    $episode = Http::getHtml($a->href);
+                    if($episode->status == 200)
+                    {
+                        showStatus('episode loaded');
                         
-                        $series = trim( $episode_html->find('.player-ft.df.jcs.aic.mgb2 .player-nv.df.aic.fz12.b-fz16 a', 0)->href );
-                        // var_dump(explode('.com/hentai/', $series));die;
-                        $tmp = explode('.com/hentai/', $series);
-                        if(!isset($tmp[1]))
-                        {
-                            var_dump($episode_html->find('.player-ft.df.jcs.aic.mgb2 .player-nv.df.aic.fz12.b-fz16 a', 0)->outertext);
-                            die;
-                        }
-                        $series = str_replace('/', '', $tmp[1] );
+                        $episode_html = $episode->response;
+                        if(
+                            true
+                        )
+                        {   
+                            $iframe = $episode_html->find('.player.mgt.mgb2 iframe[allowfullscreen]', 0)->src;
+                            if(!str_contains($iframe, 'http'))
+                            {
+                                $iframe = $episode_html->find('.player.mgt.mgb2 iframe[allowfullscreen]', 0)->getAttribute('data-litespeed-src');
+                            }
 
-                        $year = trim( $episode_html->find('.anime-cn.clb div a', 0)->plaintext );
-                        $released_on = trim( $episode_html->find('.anime-cn.clb div span.mgr.mgb', 5)->innertext );
-                        $quality = trim( $episode_html->find('.anime-cn.clb div a', 1)->plaintext );
-                        $description = trim( $episode_html->find('.description.link-co.mgb2', 0)->plaintext );
-                        $alt_name = trim( 
-                            $episode_html->find('.description.link-co.mgb2 p', 1)?->plaintext 
-                        );
-                        $animidhentai_link = $a->href;
-                        $ep_data = compact(
-                            'title',
-                            'series',
-                            'released_on',
-                            'quality',
-                            'description',
-                            'animidhentai_link',
-                            'alt_name',
-                            'poster',
-                        );
-                        $links = [
-                            'iframe' => $iframe
-                        ];
-
-                        //- check the oother site if it has any video link
-                        showStatus('Checking the exernal site for mp4');
-                        $search = 'https://tube.hentaistream.com/?s=' . urlencode($title);
-                        $searchReq = Http::getHtml($search);
-                        if($searchReq->status == 200)
-                        {
-                            $searchHtml = $searchReq->response;
-                            if($searchHtml->find('.bodyleft .post', 0))
-                            { 
-                                $ep_data['thumbnail'] = $searchHtml->find('.bodyleft .post .postimg .thumbIMG', 0)->src; 
-
-                                showStatus('Checking the exernal site for mp4 - step 2');
-
-                                $search2 = $searchHtml->find('.bodyleft .post .postimg a', 0)->href;
-                                $searchReq2 = Http::getHtml($search2);
-                                if($searchReq2->status == 200)
+                            $title = trim( $episode_html->find('.anime-cn.clb h1', 0)->plaintext );
+                            $poster = trim( $episode_html->find('.anime-tb.pctr.dn.c-db img', 0)->getAttribute('data-src') );
+                            
+                            $series = str_replace('/', '', strtolower($title) );
+                            if(
+                                $episode_html->find('.player-ft.df.jcs.aic.mgb2 .player-nv.df.aic.fz12.b-fz16 a', 0)
+                            )
+                            {
+                                $series_tmp = trim( $episode_html->find('.player-ft.df.jcs.aic.mgb2 .player-nv.df.aic.fz12.b-fz16 a', 0)->href );
+                                // var_dump(explode('.com/hentai/', $series));die;
+                                $tmp = explode('.com/hentai/', $series_tmp);
+                                if(!isset($tmp[1]))
                                 {
-                                    $searchHtml2 = $searchReq2->response;
-                                    if(
-                                        $searchHtml2->find('.videohere iframe[allowfullscreen]', 0)
-                                    )
-                                    {
-                                        showStatus('Checking the exernal site for mp4 - step 3');
+                                    echo $a->href; die;
+                                }
+                                $series = str_replace('/', '', $tmp[1] );
+                            }
+                            $genres = '';
+                            if(
+                                $episode_html->find('.genres.mgt.df.fww.por a', 0)
+                            )
+                            {
+                                $ar = [];
+                                foreach($episode_html->find('.genres.mgt.df.fww.por a') as $gen)
+                                {
+                                    $ar[] = trim($gen->plaintext);
+                                }
+                                $genres = join(',', $ar);
+                            }
 
-                                        $searchReq3 = Http::getHtml(
-                                            $searchHtml2->find('.videohere iframe[allowfullscreen]', 0)->src
-                                        );
-                                        if($searchReq3->status == 200)
+                            $year = trim( $episode_html->find('.anime-cn.clb div a', 0)->plaintext );
+                            $released_on = trim( $episode_html->find('.anime-cn.clb div span.mgr.mgb', 5)->innertext );
+                            $quality = trim( $episode_html->find('.anime-cn.clb div a', 1)->plaintext );
+                            $description = trim( $episode_html->find('.description.link-co.mgb2', 0)->plaintext );
+                            $alt_name = trim( 
+                                $episode_html->find('.description.link-co.mgb2 p', 1)?->plaintext 
+                            );
+                            $animidhentai_link = $a->href;
+                            $ep_data = compact(
+                                'title',
+                                'series',
+                                'released_on',
+                                'quality',
+                                'description',
+                                'animidhentai_link',
+                                'alt_name',
+                                'poster',
+                                'genres',
+                            );
+                            $links = [
+                                'iframe' => $iframe
+                            ];
+
+                            //- check the oother site if it has any video link
+                            showStatus('Checking the exernal site for mp4');
+                            $search = 'https://tube.hentaistream.com/?s=' . urlencode(trim( str_replace('Uncensored', '', str_replace('Subbed', '', $title) )));
+                            $searchReq = Http::getHtml($search);
+                            if($searchReq->status == 200)
+                            {
+                                $searchHtml = $searchReq->response;
+                                if($searchHtml->find('.bodyleft .post', 0))
+                                { 
+                                    $ep_data['thumbnail'] = $searchHtml->find('.bodyleft .post .postimg .thumbIMG', 0)->src; 
+
+                                    showStatus('Checking the exernal site for mp4 - step 2');
+
+                                    $search2 = $searchHtml->find('.bodyleft .post .postimg a', 0)->href;
+                                    $searchReq2 = Http::getHtml($search2);
+                                    if($searchReq2->status == 200)
+                                    {
+                                        $searchHtml2 = $searchReq2->response;
+                                        if(
+                                            $searchHtml2->find('.videohere iframe[allowfullscreen]', 0)
+                                        )
                                         {
-                                            $searchHtml3 = $searchReq3->response;
-                                            if($searchHtml3->find('video source[type=video/mp4]', 0))
+                                            showStatus('Checking the exernal site for mp4 - step 3');
+
+                                            $searchReq3 = Http::getHtml(
+                                                $searchHtml2->find('.videohere iframe[allowfullscreen]', 0)->src
+                                            );
+                                            if($searchReq3->status == 200)
                                             {
-                                                $video_link = $searchHtml3->find('video source[type=video/mp4]', 0)->src;
-                                                showStatus('checking mp4 validity');
-                                                if(
-                                                    Http::isValidLink($video_link, 'video/mp4')
-                                                )
+                                                $searchHtml3 = $searchReq3->response;
+                                                if($searchHtml3->find('video source[type=video/mp4]', 0))
                                                 {
-                                                    $links['video'] = $video_link;
+                                                    $video_link = $searchHtml3->find('video source[type=video/mp4]', 0)->src;
+                                                    showStatus('checking mp4 validity');
+                                                    if(
+                                                        Http::isValidLink($video_link, 'video/mp4')
+                                                    )
+                                                    {
+                                                        $links['video'] = $video_link;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        $ep_data['links'] = json_encode($links);
-                        showStatus('Adding to database');
-                        save_data($ep_data, $db);
-                        //die;
+                            $ep_data['links'] = json_encode($links);
+                            showStatus('Adding to database');
+                            save_data($ep_data, $db);
+                            //die;
+                        }
                     }
                 }
             }
@@ -161,7 +189,7 @@ if($req->status == 200)
 
 
         $page_number++;
-        $continue = false;
+        //$continue = false;
     }
 }
 

@@ -71,8 +71,15 @@ if($req->status == 200)
                         $title = trim( $episode_html->find('.anime-cn.clb h1', 0)->plaintext );
                         $poster = trim( $episode_html->find('.anime-tb.pctr.dn.c-db img', 0)->getAttribute('data-src') );
                         
-                        $series = trim( $episode_html->find('.player-nv.df.aic.fz12.b-fz16 a', 0)->href );
-                        $series = str_replace('/', '', explode('.com/hentai/', $series)[1] );
+                        $series = trim( $episode_html->find('.player-ft.df.jcs.aic.mgb2 .player-nv.df.aic.fz12.b-fz16 a', 0)->href );
+                        // var_dump(explode('.com/hentai/', $series));die;
+                        $tmp = explode('.com/hentai/', $series);
+                        if(!isset($tmp[1]))
+                        {
+                            var_dump($episode_html->find('.player-ft.df.jcs.aic.mgb2 .player-nv.df.aic.fz12.b-fz16 a', 0)->outertext);
+                            die;
+                        }
+                        $series = str_replace('/', '', $tmp[1] );
 
                         $year = trim( $episode_html->find('.anime-cn.clb div a', 0)->plaintext );
                         $released_on = trim( $episode_html->find('.anime-cn.clb div span.mgr.mgb', 5)->innertext );
@@ -146,7 +153,7 @@ if($req->status == 200)
                         $ep_data['links'] = json_encode($links);
                         showStatus('Adding to database');
                         save_data($ep_data, $db);
-                        die;
+                        //die;
                     }
                 }
             }

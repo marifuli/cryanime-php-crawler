@@ -99,6 +99,19 @@ class Http
 
         return $response->getBody()->getContents();
     }
+    static function addHentai ($data) 
+    {
+        $client = new \GuzzleHttp\Client(["base_uri" => env('api.base_uri')]);
+        $options = [
+            'json' => $data
+        ]; 
+        $response = $client->post(env('api.addHentai') . '?apikey=' . env('apiKey'), $options);
+
+        return $response->getBody()->getContents();
+    }
+
+
+
     static function isValidLink($link, $contentType = null)
     {
         try {

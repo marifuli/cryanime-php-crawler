@@ -8,12 +8,14 @@ return [
         'pass' => ''
     ],
     'apiKey' => '4efa1878-8a08-437c-b136-0e5aced9ff89',
-    'api.base_uri' => 'https://cryanime.com',
+    'api.base_uri' => 'https://api.cryanime.com',
     'api.addAnime' => '/api/anime/add',
     'api.addEpisode' => '/api/episode/add',
+    'api.addHentai' => '/api/hentai/add',
     
-    'gogoanime' => 'https://gogoanime.pe',
+    'gogoanime' => 'https://gogoanime.sk',
     'mangaowl' => 'https://mangaowl.net',
+    'readm.org' => 'https://readm.org',
 
     'animeidhentai' => 'https://animeidhentai.com', // priority 1
     'tube.hentaistream' => 'https://tube.hentaistream.com', // priority 2

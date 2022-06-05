@@ -11,5 +11,5 @@ if(!isset($argv[1]))
 {
     die('Please define an app name!');
 }
-include './apps/' . $argv[1] . '.php';
+include 'apps/' . $argv[1] . '.php';
 

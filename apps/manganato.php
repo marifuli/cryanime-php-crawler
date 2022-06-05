@@ -38,7 +38,7 @@ if($req->status == 200)
         {
             $pages_html = $pages->response;
            
-            foreach($pages_html->find('.panel-content-genres .content-genres-item a') as $element)
+            foreach($pages_html->find('.panel-content-genres .content-genres-item a.genres-item-img') as $element)
             {
                 $manga_link = $element->href;
                 // sleep(4);

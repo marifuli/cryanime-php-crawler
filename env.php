@@ -16,6 +16,7 @@ return [
     'gogoanime' => 'https://gogoanime.sk',
     'mangaowl' => 'https://mangaowl.net',
     'readm.org' => 'https://readm.org',
+    'manganato' => 'https://manganato.com',
 
     'animeidhentai' => 'https://animeidhentai.com', // priority 1
     'tube.hentaistream' => 'https://tube.hentaistream.com', // priority 2

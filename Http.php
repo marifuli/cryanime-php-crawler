@@ -1,7 +1,7 @@
 <?php
 class Http 
 {
-    static function getHtml($url)
+    static function getHtml($url, $headers=[])
     {
         $res = new stdClass();
         $res->status = 500;

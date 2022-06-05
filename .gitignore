@@ -2,3 +2,4 @@
 vendor
 readm.failed_data.json
 manganato.failed_data.json
+*/*error

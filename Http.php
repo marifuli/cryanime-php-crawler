@@ -11,7 +11,12 @@ class Http
         try {
             //code...
             $client = new \GuzzleHttp\Client();
-            $response = $client->request('GET', $url);
+            $response = $client->request('GET', $url, [
+                'request.options' => array (
+                    'timeout' => 3,
+                    'connect_timeout' => 3 
+                ) 
+            ]);
             $res->status = $response->getStatusCode();
             $res->type = $response->getHeaderLine('content-type');
             $res->response = str_get_html($response->getBody());

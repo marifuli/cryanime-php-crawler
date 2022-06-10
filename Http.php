@@ -94,6 +94,26 @@ class Http
 
         return $response->getBody()->getContents();
     }
+    static function addManga ($data) 
+    {
+        $client = new \GuzzleHttp\Client(["base_uri" => env('api.base_uri')]);
+        $options = [
+            'json' => $data
+        ]; 
+        $response = $client->post(env('api.addManga') . '?apikey=' . env('apiKey'), $options);
+
+        return $response->getBody()->getContents();
+    }
+    static function addMangaChapter ($data) 
+    {
+        $client = new \GuzzleHttp\Client(["base_uri" => env('api.base_uri')]);
+        $options = [
+            'json' => $data
+        ]; 
+        $response = $client->post(env('api.addMangaChapter') . '?apikey=' . env('apiKey'), $options);
+
+        return $response->getBody()->getContents();
+    }
     static function addEpisode ($data) 
     {
         $client = new \GuzzleHttp\Client(["base_uri" => env('api.base_uri')]);

@@ -5,13 +5,16 @@ return [
         'name' => 'cryanime_crawler',
         'port' => '3306',
         'user' => 'root',
-        'pass' => ''
+        'pass' => '',
     ],
     'apiKey' => '4efa1878-8a08-437c-b136-0e5aced9ff89',
-    'api.base_uri' => 'https://api.cryanime.com',
+    'api.base_uri' => 'http://localhost:8000',
+    // 'api.base_uri' => 'https://api.cryanime.com',
     'api.addAnime' => '/api/anime/add',
     'api.addEpisode' => '/api/episode/add',
     'api.addHentai' => '/api/hentai/add',
+    'api.addManga' => '/api/manga/add',
+    'api.addMangaChapter' => '/api/manga/chapter/add',
     
     'gogoanime' => 'https://gogoanime.sk',
     'mangaowl' => 'https://mangaowl.net',

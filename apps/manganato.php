@@ -28,7 +28,7 @@ $headers = [
 
 if($req->status == 200)
 {
-    for ($i=1; $i < 1317; $i++) 
+    for ($i=1; $i < 3; $i++) 
     { 
         showStatus('Going to get the list pages');
         $pages = Http::getHtml('https://manganato.com/genre-all/' . $i);

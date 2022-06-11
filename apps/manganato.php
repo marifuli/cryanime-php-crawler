@@ -62,88 +62,90 @@ if($req->status == 200)
                         // echo $alt_names;exit;
                         $released_on = '';
                         $genres = [];
-                        if($manga_html->find('div.panel-story-info > div.story-info-right > table > tbody > tr:nth-child(4) > td.table-value a', 0))
+                        $authors = '';
+                        $status = '';
+                        $index = 1;
+                        foreach(
+                            $manga_html->find('body > div.body-site > div.container.container-main > div.container-main-left > div.panel-story-info > div.story-info-right > table > tbody > tr') as $tr
+                        )
                         {
-                            foreach($manga_html->find('div.panel-story-info > div.story-info-right > table > tbody > tr:nth-child(4) > td.table-value a') as $gen)
+                            // echo $tr->innertext . "\n";
+                            if($index == 2)
                             {
-                                $genres[] = $gen->innertext;
+                                $authors = explode(':', strip_tags( $tr->innertext ?? ':' ) );
+                                $authors = trim($authors[1]);
                             }
+                            if($index == 3)
+                            {
+                                $status = explode(':', strip_tags( $tr->innertext ?? ':' ) );
+                                $status = trim($status[1]);
+                            }
+                            if($index == 4)
+                            {
+                                foreach($tr->find('a') as $gen)
+                                {
+                                    $genres[] = $gen->innertext;
+                                }
+                            }
+                            $index++;
                         }
                         $genres = join(', ', $genres);
-
-                        $authors = $manga_html->find('body > div.body-site > div.container.container-main > div.container-main-left > div.panel-story-info > div.story-info-right > table > tbody > tr:nth-child(2) > td.table-value', 0)->innertext ?? '';
-                        $status = $manga_html->find('body > div.body-site > div.container.container-main > div.container-main-left > div.panel-story-info > div.story-info-right > table > tbody > tr:nth-child(3) > td.table-value', 0)->innertext ?? '';
+                        // die($genres);
                         $type = '';
                         $description = $manga_html->find('.panel-story-info-description', 0) ? $manga_html->find('.panel-story-info-description', 0)->innertext : '';
                         $image = $manga_html->find('.info-image img', 0) ? $manga_html->find('.info-image img', 0)->src : '';
                         $manga_id = $manga_link;
-                        // die($title);
 
-                        $sql = "INSERT INTO `manga` (`name`, `alt_names`, `image`, `released_on`, `genres`, `authors`, `status`, `type`, `description`, `manga_id`) VALUES (?, ?, ?,?,?,?,?,?,?,?)";
-                        $stmt2 = $db->prepare($sql);
-                        $stmt2->bind_param(
-                            'ssssssssss',
-                            $title,
-                            $alt_names,
-                            $image,
-                            $released_on,
-                            $genres,
-                            $authors,
-                            $status,
-                            $type,
-                            $description,
-                            $manga_id
-                        );
-                        
-                        if ($stmt2->execute()) 
+                        Http::addManga([
+                            "name" => $title,
+                            "alt_names" => $alt_names,
+                            "image" => $image,
+                            "released_on" => $released_on,
+                            "genres" => $genres,
+                            "authors" => $authors,
+                            "status" => $status,
+                            "type" => null,
+                            "description" => str_replace(
+                                                'Description :', '', 
+                                                strip_tags($description)
+                                            ),
+                            "manganato_url" => $manga_id,
+                        ]);
+                        showStatus('Added Manga');
+
+                        // document.querySelectorAll('.episodes-box .item.season_start .truncate a')
+                        foreach($manga_html->find('.row-content-chapter a.chapter-name') as $link)
                         {
-                            showStatus('Added Manga');
-                            // document.querySelectorAll('.episodes-box .item.season_start .truncate a')
-                            foreach($manga_html->find('.row-content-chapter a.chapter-name') as $link)
+                            // echo $link->href;exit;
+                            $chap_link = $link->href;
+                            $chap_title = $link->innertext ?? ''; 
+                            // sleep(4);
+                            $chapter = Http::getHtml($chap_link, $headers);
+                            if($chapter->status == 200)
                             {
-                                // echo $link->href;exit;
-                                $chap_link = $link->href;
-                                $chap_title = $link->innertext ?? ''; 
-                                // sleep(4);
-                                $chapter = Http::getHtml($chap_link, $headers);
-                                if($chapter->status == 200)
+                                $chapter_html = $chapter->response;
+                                $title = $chap_title;
+                                $chap_number = '';
+                                $chap_number = explode('Chapter', $title);
+                                $chap_number = trim( $chap_number[1] );
+                                $chap_number = explode(':', $chap_number);
+                                $chap_number = trim( $chap_number[0] );
+                                $chap_number =  filter_var( $chap_number, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION );
+
+                                $images = [];
+                                foreach($chapter_html->find('.container-chapter-reader img') as $im) 
                                 {
-                                    $chapter_html = $chapter->response;
-                                    $title = $chap_title;
-                                    $chap_number = explode('-', $chap_link);
-                                    $chap_number = trim($chap_number[1]);
-                                    $images = [];
-                                    foreach($chapter_html->find('.container-chapter-reader img') as $im) 
-                                    {
-                                        $images[] = $im->src;
-                                    }
-                                    $images = json_encode($images);
-                                    $sql = "INSERT INTO `manga_chapter` (`manga_id`, `chapter_number`, `title`, `uploaded`) VALUES (?,?,?,?);";
-                                    $stmt2 = $db->prepare($sql);
-                                    $stmt2->bind_param(
-                                        'ssss',
-                                        $manga_id,
-                                        $chap_number,
-                                        $title,
-                                        $images
-                                    );
-                                    
-                                    if ($stmt2->execute()) 
-                                    {
-                                        showStatus('Chapter added');
-                                    }
-                                    else 
-                                    {
-                                        showStatus('Failed to add chapter');
-                                    }
+                                    $images[] = $im->src;
                                 }
+                                Http::addMangaChapter([
+                                    'manganato_url' => $manga_id,
+                                    'chapter' => $chap_number,
+                                    'title' => $title,
+                                    'pages' => $images,
+                                ]);
+                                showStatus('Chapter added');
                             }
-                        }
-                        else 
-                        {
-                            showStatus('Failed to add Manga');
-                        }
-                        $stmt2->close();
+                        } 
                     }
                 }
             }

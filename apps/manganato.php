@@ -28,19 +28,21 @@ $headers = [
 
 if($req->status == 200)
 {
-    for ($i=1; $i < 3; $i++) 
+    for ($i=1; $i < 2; $i++) 
     { 
         showStatus('Going to get the list pages');
-        $pages = Http::getHtml('https://manganato.com/genre-all/' . $i);
+        // $pages = Http::getHtml('https://manganato.com/genre-all/' . $i);
+        $pages = $req;
         showStatus('In page ' . $i);
 
         if($pages->status == 200)
         {
             $pages_html = $pages->response;
            
-            foreach($pages_html->find('.panel-content-genres .content-genres-item a.genres-item-img') as $element)
+            foreach($pages_html->find('.panel-content-homepage .content-homepage-item a.item-img') as $element)
             {
                 $manga_link = $element->href;
+                // showStatus($manga_link);
                 // sleep(4);
                 $manga = Http::getHtml($manga_link, $headers);
                 if($manga->status == 200)
